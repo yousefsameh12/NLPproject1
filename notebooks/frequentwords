@@ -1,0 +1,95 @@
+# ==========================================
+# 1) Imports
+# ==========================================
+import re
+from pathlib import Path
+from collections import Counter
+
+# ==========================================
+# 2) Load and Normalize Texts
+# ==========================================
+def load_texts(local_human: str = '../data/HumanNature.txt',
+               local_power: str = '../data/Power.txt'):
+    """Load Human Nature and Power texts from disk."""
+    p1, p2 = Path(local_human), Path(local_power)
+
+    if not p1.exists():
+        raise FileNotFoundError(f"Missing file: {p1}")
+    if not p2.exists():
+        raise FileNotFoundError(f"Missing file: {p2}")
+
+    human_text   = p1.read_text(encoding='utf-8', errors='ignore')
+    power_text   = p2.read_text(encoding='utf-8', errors='ignore')
+    return human_text, power_text
+
+def normalize(text: str) -> str:
+    """Normalize line endings."""
+    return text.replace('\r\n', '\n')
+
+# Load texts
+human_raw, power_raw = load_texts()
+human_text = normalize(human_raw)
+power_text = normalize(power_raw)
+
+print(f"Loaded texts: Human Nature chars={len(human_text):,}, Power chars={len(power_text):,}")
+
+# ==========================================
+# 3) Tokenization
+# ==========================================
+WORD_RE = re.compile(r"[A-Za-z']+")
+
+def words(text):
+    """Tokenize words (lowercased)."""
+    return WORD_RE.findall(text.lower())
+
+def sentences(text):
+    """Naive sentence splitter."""
+    return [s.strip() for s in re.split(r'(?<=[.!?])\s+', text) if s.strip()]
+
+human_words = words(human_text)
+power_words = words(power_text)
+
+human_sentences = sentences(human_text)
+power_sentences = sentences(power_text)
+
+print(f"Human Nature words: {len(human_words):,}, Power words: {len(power_words):,}")
+print(f"Human Nature sentences: {len(human_sentences):,}, Power sentences: {len(power_sentences):,}")
+
+# ==========================================
+# 4) Pronoun Counts
+# ==========================================
+def pronoun_counts(tokens):
+    target = {'he','she','him','her'}
+    c = Counter(w for w in tokens if w in target)
+    total = sum(c.values())
+    return c, total
+
+h_c, h_tot = pronoun_counts(human_words)
+p_c, p_tot = pronoun_counts(power_words)
+
+print("Human Nature pronouns:", dict(h_c), "total:", h_tot)
+print("Power pronouns:", dict(p_c), "total:", p_tot)
+
+# ==========================================
+# 5) Verbs Near Pronouns (Naive)
+# ==========================================
+def verb_like(word):
+    """Crude heuristic for verbs."""
+    return bool(re.match(r".*(ed|ing|s)$", word)) or word in {
+        "say","says","said","go","goes","went",
+        "come","comes","came","think","thinks","thought",
+        "see","sees","saw","know","knows","knew"
+    }
+
+def verbs_near_pronouns(tokens, window=2):
+    verbs_for = {'he':[], 'she':[]}
+    for i,w in enumerate(tokens):
+        if w in ('he','she'):
+            for j in range(max(0,i-window), min(len(tokens), i+window+1)):
+                if j==i: continue
+                if verb_like(tokens[j]):
+                    verbs_for[w].append(tokens[j])
+    return {k: Counter(v).most_common(20) for k,v in verbs_for.items()}
+
+print("Human Nature verbs near pronouns:", verbs_near_pronouns(human_words))
+print("Power verbs near pronouns:", verbs_near_pronouns(power_words))
