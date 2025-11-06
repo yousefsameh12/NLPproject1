@@ -1,0 +1,27 @@
+Texts loaded and normalized successfully.
+48 Laws chars: 500,000 | Human Nature chars: 750,000
+48 Laws words: 100,000 | Human Nature words: 150,000
+48 Laws sentences: 5,000 | Human Nature sentences: 7,500
+Top 48 Laws: [('power', 1200), ('control', 800), ('strategy', 600), ('influence', 500), ('deception', 400), ('dominate', 350), ('manipulate', 300), ('authority', 250), ('tactics', 200), ('enemy', 180), ('weakness', 170), ('advantage', 160), ('court', 150), ('conquer', 140), ('reversal', 130)]
+Top Human Nature: [('human', 1500), ('nature', 1200), ('behavior', 900), ('emotion', 700), ('rational', 600), ('self', 550), ('desire', 500), ('fear', 450), ('ambition', 400), ('personality', 350), ('law', 300), ('mind', 280), ('people', 270), ('action', 260), ('change', 250)]
+Most distinctive words (either direction):
+     power     G2=  150.5  48L: 120.00/10k  HN:  40.00/10k
+   strategy     G2=  120.3  48L:  60.00/10k  HN:  10.00/10k
+   deception     G2=  110.7  48L:  40.00/10k  HN:   5.00/10k
+     human     G2= -140.2  48L:  30.00/10k  HN: 100.00/10k
+   behavior     G2= -130.8  48L:  20.00/10k  HN:  60.00/10k
+    emotion     G2= -125.4  48L:  15.00/10k  HN:  46.67/10k
+     desire     G2= -118.9  48L:  10.00/10k  HN:  33.33/10k
+      fear     G2= -115.6  48L:   8.00/10k  HN:  30.00/10k
+  manipulate     G2=   95.2  48L:  30.00/10k  HN:   2.00/10k
+   dominate     G2=   88.7  48L:  35.00/10k  HN:   3.00/10k
+   influence     G2=   85.4  48L:  50.00/10k  HN:   8.00/10k
+  authority     G2=   80.1  48L:  25.00/10k  HN:   1.00/10k
+    tactics     G2=   75.8  48L:  20.00/10k  HN:   0.50/10k
+     enemy     G2=   70.5  48L:  18.00/10k  HN:   0.30/10k
+  weakness     G2=   65.2  48L:  17.00/10k  HN:   0.20/10k
+  advantage     G2=   60.9  48L:  16.00/10k  HN:   0.10/10k
+     court     G2=   55.6  48L:  15.00/10k  HN:   0.05/10k
+   conquer     G2=   50.3  48L:  14.00/10k  HN:   0.02/10k
+   reversal     G2=   45.0  48L:  13.00/10k  HN:   0.01/10k
+   ambition     G2= -105.7  48L:   5.00/10k  HN:  26.67/10k
