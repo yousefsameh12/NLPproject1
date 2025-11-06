@@ -1,0 +1,10 @@
+File error: Missing file: ../data/48LawsOfPower.txt
+→ Please place '48LawsOfPower.txt' at this path or update load_texts(...).
+Using fallback sample texts for demo.
+48 Laws chars: 512 | Human Nature chars: 456
+48 Laws words: 100 | Human Nature words: 85
+48 Laws sentences: 5 | Human Nature sentences: 4
+48 Laws: 5/100 = 5.00%
+Human Nature: 3/85 = 3.53%
+48 Laws adverbs (first 20): ['comfortably', 'brilliantly']
+True adverbs from 48 Laws (first 20): ['always', 'comfortably', 'brilliantly']
