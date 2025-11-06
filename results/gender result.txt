@@ -1,0 +1,8 @@
+File error: Missing file: ../data/HumanNature.txt. Using fallback sample texts for demo.
+Loaded texts: Human Nature chars=112, Power chars=98
+Human Nature words: 22, Power words: 18
+Human Nature sentences: 3, Power sentences: 3
+Human Nature pronouns: {'he': 2, 'she': 2, 'him': 1, 'her': 1}, total: 6
+Power pronouns: {'he': 1, 'she': 1, 'him': 1, 'her': 2}, total: 5
+Human Nature verbs near pronouns: {'he': [('thinks', 1), ('comes', 1)], 'she': [('said', 1), ('goes', 1)]}
+Power verbs near pronouns: {'he': [('manipulates', 1)], 'she': [('deceives', 1)]}
