@@ -1,1 +1,93 @@
+Requirements to Run the Notebooks
+1) Python
 
+Version: Python 3.8 or higher.
+
+Where to get it: python.org
+.
+
+Notes: Codespaces already includes Python, so you don’t need to install it there.
+
+2) Required Python Packages
+
+These packages handle text processing, tokenization, and optional POS tagging.
+
+Basic Packages
+
+These are enough for word/token analysis, pronouns, and simple -ly adverb counting:
+
+pip install pandas notebook
+
+Optional (for advanced linguistic analysis with spaCy)
+
+Use spaCy for more accurate verb/adverb detection:
+
+pip install spacy
+python -m spacy download en_core_web_sm
+
+
+pandas → optional, useful for tables and data analysis.
+
+notebook → required to run Jupyter notebooks.
+
+spacy → advanced NLP library.
+
+en_core_web_sm → small English model for spaCy.
+
+3) Folder Structure
+
+Your repository should look like this:
+
+NLPproject1/
+ ├─ data/
+ │   ├─ HumanNature.txt
+ │   └─ Power.txt
+ ├─ notebooks/
+ │   ├─ adverbs.ipynb
+ │   └─ genderlanguage.ipynb
+ └─ ... (other repo files)
+
+
+The notebooks reference the books using relative paths, e.g., ../data/HumanNature.txt.
+
+Make sure filenames exactly match what the code expects (case-sensitive).
+
+4) Running the Notebooks
+
+Open your .ipynb notebook in Codespaces or Jupyter.
+
+Make sure the kernel is set to Python 3.
+
+Run the cells from top to bottom.
+
+Tip: If you see ModuleNotFoundError, it means the required package isn’t installed. Use pip install <package> in the terminal.
+
+5) Recommended: Use a Virtual Environment
+
+Using a virtual environment keeps project dependencies isolated:
+
+# Create a virtual environment
+python -m venv .venv
+
+# Activate it
+source .venv/bin/activate      # Linux/macOS
+.venv\Scripts\activate.ps1     # Windows PowerShell
+
+# Upgrade pip and install packages
+pip install --upgrade pip
+pip install pandas notebook spacy
+python -m spacy download en_core_web_sm
+
+6) Quick Verification
+
+After setup:
+
+ls ../data
+
+
+You should see:
+
+HumanNature.txt  Power.txt
+
+
+Now your notebooks will run without FileNotFoundError or missing modules.
