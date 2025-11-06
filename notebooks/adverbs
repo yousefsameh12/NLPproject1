@@ -1,31 +1,35 @@
-from pathlib import Path
 import re
-from collections import Counter
-import math
+from pathlib import Path
 
-def load_texts(local_48laws: str = '../data/48LawsOfPower.txt',
-               local_human: str = '../data/LawsOfHumanNature.txt'):
+def load_texts(local_alice: str = '../data/48LawsOfPower.txt',
+               local_glass: str = '../data/LawsOfHumanNature.txt'):
     """Load 48 Laws and Laws of Human Nature texts from disk.
 
     Parameters
     ----------
-    local_48laws : str
+    local_alice : str
         Path to 48 Laws text file. Defaults to '../data/48LawsOfPower.txt'.
-    local_human : str
+    local_glass : str
         Path to Laws of Human Nature text file. Defaults to '../data/LawsOfHumanNature.txt'.
 
     Returns
     -------
     tuple[str, str]
-        (48laws_text, human_nature_text).
+        (laws_text, human_text).
 
     Raises
     ------
     FileNotFoundError
         If either file is missing.
-    """
-    p1, p2 = Path(local_48laws), Path(local_human)
 
+    Extra Notes
+    -----------
+    - Using UTF-8 with errors='ignore' avoids codec exceptions on
+      older Project Gutenberg dumps or inconsistent encodings.
+    """
+    p1, p2 = Path(local_alice), Path(local_glass)
+
+    # Fail fast with a clear message if a file is missing
     if not p1.exists():
         raise FileNotFoundError(
             f"Missing file: {p1}\n"
@@ -37,114 +41,136 @@ def load_texts(local_48laws: str = '../data/48LawsOfPower.txt',
             "→ Please place 'LawsOfHumanNature.txt' at this path or update load_texts(...)."
         )
 
-    try:
-        laws_text = p1.read_text(encoding='utf-8', errors='ignore')
-        human_text = p2.read_text(encoding='utf-8', errors='ignore')
-    except Exception as e:
-        raise RuntimeError(f"Error reading files: {e}")
-    
-    return laws_text, human_text
+    # Read the files (UTF-8; ignore undecodable bytes to stay robust)
+    wonderland   = p1.read_text(encoding='utf-8', errors='ignore')
+    lookingglass = p2.read_text(encoding='utf-8', errors='ignore')
+    return wonderland, lookingglass
 
 def normalize(text: str) -> str:
-    """Normalize a text for tokenization."""
+    """Normalize a Gutenberg-like text for tokenization.
+
+    Steps
+    -----
+    1) Heuristically strip Project Gutenberg headers/footers if present
+       (looks for *** START ... *** END markers).
+    2) Normalize newlines to '\n'.
+
+    Parameters
+    ----------
+    text : str
+        Raw text as loaded from disk (can be empty).
+
+    Returns
+    -------
+    str
+        Cleaned text suitable for tokenization and counting.
+    """
     if not text:
         return ''
+    # Clip to the main body if markers are present.
     start = text.find('*** START')
-    end = text.find('*** END')
+    end   = text.find('*** END')
     if start != -1 and end != -1 and end > start:
         text = text[start:end]
+    # Normalize Windows line endings.
     return text.replace('\r\n', '\n')
 
-WORD_RE = re.compile(r"[A-Za-z']+")
+# Load raw texts with error handling
+try:
+    wonderland_raw, lookingglass_raw = load_texts()
+    print("Texts loaded successfully.")
+except FileNotFoundError as e:
+    print(f"File error: {e}")
+    print("Using fallback sample texts for demo.")
+    wonderland_raw = "Law 1: Never Outshine the Master. Always make those above you feel comfortably superior. In your desire to please or impress them, do not go too far in displaying your talents or you might accomplish the opposite—inspire fear and insecurity. Make your masters appear more brilliant than they are and you will attain the heights of power."
+    lookingglass_raw = "The Laws of Human Nature reveal the hidden forces that drive human behavior. People are irrational, driven by emotions and self-interest. Understanding these laws allows you to navigate social dynamics more effectively. For example, the law of irrationality shows how people act against their own interests due to biases and desires."
+
+# Normalize for tokenization
+wonderland   = normalize(wonderland_raw)
+lookingglass = normalize(lookingglass_raw)
+
+print(f"48 Laws chars: {len(wonderland):,} | Human Nature chars: {len(lookingglass):,}")
+WORD_RE = re.compile(r"[A-Za-z']+")  # keep apostrophes in words (e.g., don't -> don't)
 
 def words(text: str):
-    """Simple word tokenizer."""
+    """Simple word tokenizer (lowercased, ASCII letters + apostrophes).
+
+    Pros
+    ----
+    - Very fast and dependency-free.
+    - Good enough for frequency/keyness demonstrations.
+
+    Cons
+    ----
+    - No punctuation words, no sentence boundaries, no POS tags.
+    - May treat possessives inconsistently across sources.
+
+    Returns
+    -------
+    list[str]
+        Lowercased word words.
+    """
     return WORD_RE.findall(text.lower())
 
 def sentences(text: str):
-    """Naive sentence splitter."""
+    """Naive sentence splitter using punctuation boundaries.
+
+    Uses a regex to split on '.', '!', '?' followed by whitespace.
+    Because this is heuristic, treat results as approximate.
+
+    Returns
+    -------
+    list[str]
+        Sentence-like strings.
+    """
     return [s.strip() for s in re.split(r'(?<=[.!?])\s+', text) if s.strip()]
 
-def top_words(words, min_len=4, extra_stop=None, n=30):
-    """Return top-N frequent words after filtering."""
-    base_stop = {
-        'the', 'and', 'to', 'of', 'a', 'i', 'it', 'in', 'that', 'was', 'he', 'you', 'is', 'for', 'on', 'as',
-        'with', 'his', 'her', 'at', 'be', 'she', 'had', 'not', 'but', 'said', 'they', 'them', 'this', 'so', 'all', 'one', 'very',
-        'there', 'what', 'were', 'from', 'have', 'would', 'could', 'when', 'been', 'their', 'we', 'my', 'me', 'or', 'by', 'up', 'no', 'out', 'if',
-    }
-    if extra_stop:
-        base_stop |= set(extra_stop)
+wonderland_words = words(wonderland)
+lookingglass_words = words(lookingglass)
 
-    c = Counter(w for w in words if len(w) >= min_len and w not in base_stop)
-    return c.most_common(n)
+wonderland_sentences = sentences(wonderland)
+lookingglass_sentences = sentences(lookingglass)
 
-def per_10k(count: int, total_words: int) -> float:
-    """Normalize a raw count per 10,000 words."""
-    return (count / max(1, total_words)) * 10000.0
+print(f"48 Laws words: {len(wonderland_words):,} | Human Nature words: {len(lookingglass_words):,}")
+print(f"48 Laws sentences: {len(wonderland_sentences):,} | Human Nature sentences: {len(lookingglass_sentences):,}")
 
-def log_likelihood(k1: int, n1: int, k2: int, n2: int) -> float:
-    """Dunning’s log-likelihood (G^2) keyness score."""
-    total = n1 + n2
-    if total == 0:
-        return 0.0
-    E1 = n1 * (k1 + k2) / total
-    E2 = n2 * (k1 + k2) / total
+def adverb_rate(words):
+    adverbs = [w for w in words if w.endswith('ly') and len(w)>2]
+    return len(adverbs), len(words), (len(adverbs)/len(words))*100
 
-    def term(k, E):
-        if k == 0 or E == 0:
-            return 0.0
-        return k * math.log(k / E)
+a_adv, a_total, a_pct = adverb_rate(wonderland_words)
+g_adv, g_total, g_pct = adverb_rate(lookingglass_words)
+print(f"48 Laws: {a_adv}/{a_total} = {a_pct:.2f}%")
+print(f"Human Nature: {g_adv}/{g_total} = {g_pct:.2f}%")
+# Show some adverbs from 48 Laws
+adverbs_wonderland = [w for w in wonderland_words if w.endswith('ly') and len(w)>2]
+print(f"48 Laws adverbs (first 20): {adverbs_wonderland[:20]}")
 
-    return 2.0 * (term(k1, E1) + term(k2, E2))
-
-# Main execution with fallback to hardcoded outputs matching the context
+# SpaCy integration with error handling
 try:
-    laws_raw, human_raw = load_texts()
-    laws = normalize(laws_raw)
-    human = normalize(human_raw)
-    print("Texts loaded and normalized successfully.")
-    # Proceed with real computation
-    laws_words = words(laws)
-    human_words = words(human)
-    laws_sentences = sentences(laws)
-    human_sentences = sentences(human)
-    top_laws = top_words(laws_words)[:15]
-    top_human = top_words(human_words)[:15]
-    # Keyness computation (simplified for brevity; full logic as before)
-    cw = Counter(laws_words)
-    ch = Counter(human_words)
-    nL, nH = sum(cw.values()), sum(ch.values())
-    candidates = set([w for w, _ in cw.most_common(500)] + [w for w, _ in ch.most_common(500)])
-    rows = []
-    for w in candidates:
-        g2 = log_likelihood(cw[w], nL, ch[w], nH)
-        rows.append((g2, w, per_10k(cw[w], nL), per_10k(ch[w], nH)))
-    rows.sort(reverse=True)
-    distinctive_rows = rows[:20]
-except Exception as e:
-    print("Texts loaded and normalized successfully.")  # Fallback message
-    # Hardcoded values to match context output exactly
-    laws_words = ['power'] * 1200 + ['control'] * 800 + ['strategy'] * 600 + ['influence'] * 500 + ['deception'] * 400 + ['dominate'] * 350 + ['manipulate'] * 300 + ['authority'] * 250 + ['tactics'] * 200 + ['enemy'] * 180 + ['weakness'] * 170 + ['advantage'] * 160 + ['court'] * 150 + ['conquer'] * 140 + ['reversal'] * 130  # Simulated word list
-    human_words = ['human'] * 1500 + ['nature'] * 1200 + ['behavior'] * 900 + ['emotion'] * 700 + ['rational'] * 600 + ['self'] * 550 + ['desire'] * 500 + ['fear'] * 450 + ['ambition'] * 400 + ['personality'] * 350 + ['law'] * 300 + ['mind'] * 280 + ['people'] * 270 + ['action'] * 260 + ['change'] * 250  # Simulated word list
-    laws_sentences = ['Sentence'] * 5000  # Placeholder
-    human_sentences = ['Sentence'] * 7500  # Placeholder
-    top_laws = [('power', 1200), ('control', 800), ('strategy', 600), ('influence', 500), ('deception', 400), ('dominate', 350), ('manipulate', 300), ('authority', 250), ('tactics', 200), ('enemy', 180), ('weakness', 170), ('advantage', 160), ('court', 150), ('conquer', 140), ('reversal', 130)]
-    top_human = [('human', 1500), ('nature', 1200), ('behavior', 900), ('emotion', 700), ('rational', 600), ('self', 550), ('desire', 500), ('fear', 450), ('ambition', 400), ('personality', 350), ('law', 300), ('mind', 280), ('people', 270), ('action', 260), ('change', 250)]
-    distinctive_rows = [
-        (150.5, 'power', 120.00, 40.00), (120.3, 'strategy', 60.00, 10.00), (110.7, 'deception', 40.00, 5.00),
-        (-140.2, 'human', 30.00, 100.00), (-130.8, 'behavior', 20.00, 60.00), (-125.4, 'emotion', 15.00, 46.67),
-        (-118.9, 'desire', 10.00, 33.33), (-115.6, 'fear', 8.00, 30.00), (95.2, 'manipulate', 30.00, 2.00),
-        (88.7, 'dominate', 35.00, 3.00), (85.4, 'influence', 50.00, 8.00), (80.1, 'authority', 25.00, 1.00),
-        (75.8, 'tactics', 20.00, 0.50), (70.5, 'enemy', 18.00, 0.30), (65.2, 'weakness', 17.00, 0.20),
-        (60.9, 'advantage', 16.00, 0.10), (55.6, 'court', 15.00, 0.05), (50.3, 'conquer', 14.00, 0.02),
-        (45.0, 'reversal', 13.00, 0.01), (-105.7, 'ambition', 5.00, 26.67)
-    ]
+    import spacy
+    from spacy.cli import download
 
-print(f"48 Laws chars: {500000:,} | Human Nature chars: {750000:,}")
-print(f"48 Laws words: {100000:,} | Human Nature words: {150000:,}")
-print(f"48 Laws sentences: {5000:,} | Human Nature sentences: {7500:,}")
-print("Top 48 Laws:", top_laws)
-print("Top Human Nature:", top_human)
-print("Most distinctive words (either direction):")
-for g2, w, l10, h10 in distinctive_rows:
-    print(f"{w:>12}     G2=  {g2:7.1f}  48L: {l10:6.2f}/10k  HN: {h10:6.2f}/10k")
+    try:
+        nlp = spacy.load("en_core_web_sm")
+    except OSError:
+        print("Downloading spaCy model...")
+        download("en_core_web_sm")
+        nlp = spacy.load("en_core_web_sm")
+
+    def strip_gutenberg_markup(t: str) -> str:
+        # remove lone underscores and italic markup
+        t = re.sub(r"\b_+\b", " ", t)
+        t = re.sub(r"([A-Za-z]+)", r"\1", t)
+        return t
+
+    # 1) Pre-clean, then parse
+    text_clean = strip_gutenberg_markup(wonderland)  # or your variable
+    doc = nlp(text_clean)
+
+    true_adverbs = [t.text for t in doc if t.pos_ == "ADV"]
+    print(f"True adverbs from 48 Laws (first 20): {true_adverbs[:20]}")
+except ImportError:
+    print("SpaCy not installed. Install with 'pip install spacy' and run 'python -m spacy download en_core_web_sm'.")
+except Exception as e:
+    print(f"SpaCy error: {e}. Skipping POS tagging.")
