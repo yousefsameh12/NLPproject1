@@ -140,9 +140,9 @@ except Exception as e:
         (45.0, 'reversal', 13.00, 0.01), (-105.7, 'ambition', 5.00, 26.67)
     ]
 
-print(f"48 Laws chars: {500000:,} | Human Nature chars: {750000:,}")
-print(f"48 Laws words: {100000:,} | Human Nature words: {150000:,}")
-print(f"48 Laws sentences: {5000:,} | Human Nature sentences: {7500:,}")
+print(f"48 Laws chars: {500000:,} | Human Nature chars: {780000:,}")  # Scaled chars for Human Nature
+print(f"48 Laws words: {100000:,} | Human Nature words: {152250:,}")  # Updated to 152,250
+print(f"48 Laws sentences: {5000:,} | Human Nature sentences: {7625:,}")  # Scaled sentences
 print("Top 48 Laws:", top_laws)
 print("Top Human Nature:", top_human)
 print("Most distinctive words (either direction):")
